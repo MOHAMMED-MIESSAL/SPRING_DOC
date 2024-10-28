@@ -80,4 +80,135 @@ Les dépendances peuvent être injectées de différentes manières :
 @Autowired est utilisée dans le framework Spring pour effectuer l'injection de dépendances de manière automatique .  
 En ajoutant cette annotation à un constructeur, un champ, ou un setter, Spring injecte automatiquement l’instance appropriée dans la dépendance, en gérant lui-même le cycle de vie des objets.  
 
+## Fonctionnement de @Autowired
+Lorsqu'une classe contient une dépendance annotée avec @Autowired, Spring va rechercher une instance correspondante dans le contexte IoC (Inversion of Control) et l'injecter. Voici les principaux points à connaître :  
 
+```Détection des dépendances``` : Spring scanne les classes et détecte les dépendances marquées avec @Autowired.  
+```Injection par type``` : Par défaut, @Autowired fonctionne par type. Spring cherche dans le contexte une instance du type spécifié pour l’injecter.  
+```Injection dans trois emplacements``` :  
+```Constructeur``` : Injection au niveau du constructeur pour assurer que les dépendances sont initialisées dès la création de l'objet.  
+```Setter``` : Injection via des méthodes setter pour initier les dépendances après la création de l’objet.
+```Champ``` : Injection directement dans les attributs, aussi appelée field injection.
+
+
+## Quelle est la difference entre couplage fort et couplage faible ?
+
+Le couplage est une mesure de la dépendance entre deux classes ou modules dans un programme. Il existe deux principaux types  :  
+
+```Couplage fort (tight coupling)``` : Lorsque deux classes sont fortement dépendantes l'une de l'autre, elles sont dites "fortement couplées". Cela signifie qu’une modification dans une classe impactera directement l’autre classe. Le couplage fort réduit la flexibilité, rend les classes moins réutilisables, et complique les tests unitaires.  
+
+```Couplage faible (loose coupling)``` : Lorsque deux classes ont des dépendances minimales entre elles, elles sont faiblement couplées. Cela permet une plus grande flexibilité et maintenabilité, car chaque classe peut évoluer indépendamment. Les tests unitaires sont aussi facilités.  
+
+```Example de Couplage Fort:```
+Supposons que nous avons deux classes, Service et Repository. Dans le cas d'un couplage fort, Service crée une instance de Repository directement dans son code.  
+```
+public class Repository {
+    public void getData() {
+        System.out.println("Fetching data...");
+    }
+}
+
+public class Service {
+    private Repository repository;
+
+    public Service() {
+        this.repository = new Repository(); // Couplage fort : Service dépend directement de Repository
+    }
+
+    public void doSomething() {
+        repository.getData();
+    }
+}
+
+```
+
+```Example de Couplage Faible:```
+Supposons que nous avons deux classes, Service et Repository. Dans le cas d'un couplage fort, Service crée une instance de Repository directement dans son code.   
+
+```
+public class Repository {
+    public void getData() {
+        System.out.println("Fetching data...");
+    }
+}
+
+public class Service {
+    private Repository repository;
+
+    public Service() {
+        this.repository = new Repository(); // Couplage fort : Service dépend directement de Repository
+    }
+
+    public void doSomething() {
+        repository.getData();
+    }
+}
+
+```
+
+## Spring Beans 
+
+### 1. C'est quoi Spring Beans ?
+Dans le framework Spring, un Bean est un objet qui est instancié, configuré et géré par le conteneur Spring IoC (ApplicationContext). Les beans sont les éléments de base dans Spring, car ils représentent les objets qui constituent l'application et sont gérés par Spring pour permettre une injection de dépendances et d'autres fonctionnalités.  
+
+### 2. Cycle de Vie d'un Bean
+Le cycle de vie d'un bean inclut plusieurs étapes, gérées automatiquement par le conteneur Spring :  
+
+1.```Instanciation``` : Le conteneur crée une instance de la classe (bean).  
+2.```Injection des dépendances``` : Spring injecte les dépendances définies dans la classe via le constructeur, les setters ou les annotations comme @Autowired.  
+3.```Initialisation``` : Spring appelle une méthode d'initialisation, si elle est définie (par exemple @PostConstruct ou une méthode configurée par XML).  
+4.```Utilisation``` : L'application utilise le bean.  
+5.```Destruction``` : Spring appelle une méthode de destruction, si elle est définie (par exemple @PreDestroy), avant de supprimer le bean du conteneur.  
+
+### 3. Définir un Bean dans Spring
+Il existe plusieurs manières de définir des beans dans Spring :  
+A.```Avec l'annotation @Component```: La façon la plus courante est d'annoter une classe avec @Component, ce qui permet à Spring de détecter automatiquement cette classe comme un bean lors du scan de classes.  
+```
+import org.springframework.stereotype.Component;
+
+@Component
+public class Service {
+    public void serve() {
+        System.out.println("Service is serving...");
+    }
+}
+
+```
+B.```Avec l'annotation @Bean dans une classe de configuration```: @Bean est utilisée pour déclarer un bean au sein d'une classe de configuration annotée avec @Configuration. Cette approche est souvent utilisée pour des configurations plus précises.  
+```
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public Service service() {
+        return new Service();
+    }
+}
+
+```
+
+### 4. Portée des Beans (Scopes)
+Le scope d'un bean détermine son cycle de vie dans le conteneur Spring. Les scopes les plus utilisés sont :  
+
+```Singleton (par défaut)``` : Un seul et unique instance de bean est créé dans le conteneur et partagé partout dans l'application.  
+```Prototype``` : Une nouvelle instance de bean est créée chaque fois que le bean est demandé.  
+```Request``` : Une instance de bean est créée pour chaque requête HTTP (dans une application web).  
+```Session``` : Une instance de bean est créée pour chaque session utilisateur.  
+
+```Example :```
+
+```
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+@Component
+@Scope("prototype")
+public class PrototypeService {
+    // Code de la classe
+}
+
+
+```
